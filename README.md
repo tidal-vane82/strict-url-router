@@ -81,9 +81,10 @@ malformed `--pattern`.
 ## Status
 
 Early skeleton. Route registration, matching, and the strict/lenient path
-validation are in place and usable. Not yet covered: an installable
-console script has been declared but not exercised end to end, and there's
-no test suite yet.
+validation are in place and usable, with unit tests covering `Route`,
+`Router`, and `validate_path` (run with `pytest`, or
+`python -m unittest discover tests`). Not yet covered: an installable
+console script has been declared but not exercised end to end.
 
 ## License
 
