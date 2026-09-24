@@ -140,6 +140,30 @@ class ValidatePathTests(unittest.TestCase):
     def test_lenient_normalizes_several_issues_at_once(self) -> None:
         self.assertEqual(validate_path("users//42/", lenient=True), "/users/42")
 
+    def test_percent_encoded_control_char_always_rejected(self) -> None:
+        with self.assertRaises(PathValidationError):
+            validate_path("/a%00b")
+        with self.assertRaises(PathValidationError):
+            validate_path("/a%00b", lenient=True)
+        with self.assertRaises(PathValidationError):
+            validate_path("/a%7Fb", lenient=True)
+
+    def test_percent_encoded_unreserved_char_untouched_when_strict(self) -> None:
+        self.assertEqual(validate_path("/a%2Eb"), "/a%2Eb")
+
+    def test_percent_encoded_unreserved_char_decoded_when_lenient(self) -> None:
+        self.assertEqual(validate_path("/a%2Eb", lenient=True), "/a.b")
+        self.assertEqual(validate_path("/a%7Eb", lenient=True), "/a~b")
+
+    def test_percent_encoded_slash_kept_encoded_when_lenient(self) -> None:
+        # %2F decodes to '/', which would change how the path splits into
+        # segments rather than just its spelling, so it stays encoded.
+        self.assertEqual(validate_path("/a%2Fb", lenient=True), "/a%2Fb")
+
+    def test_percent_encoding_hex_case_normalized_when_lenient(self) -> None:
+        self.assertEqual(validate_path("/a%2fb", lenient=True), "/a%2Fb")
+        self.assertEqual(validate_path("/a%2fb"), "/a%2fb")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -43,9 +43,24 @@ router.match("/users/42/", lenient=True)
 ```
 
 `PathValidationError` is only raised for structural ambiguity (missing
-leading slash, doubled slashes, a trailing slash). Control characters and
-malformed percent-encoding are rejected even in lenient mode, since those
-indicate broken input rather than a stylistic difference in the path.
+leading slash, doubled slashes, a trailing slash). Control characters,
+malformed percent-encoding, and percent-*encoded* control characters
+(`%00`, `%7F`, ...) are rejected even in lenient mode, since those indicate
+broken input rather than a stylistic difference in the path.
+
+In lenient mode, percent-encoded unreserved characters (letters, digits,
+`-`, `.`, `_`, `~`) are decoded back to their literal form, and the hex
+digits of any percent-encoding left in place are uppercased. `%2F` is left
+alone even though it decodes to `/`, since unlike the unreserved
+characters, decoding it would change how the path splits into segments:
+
+```python
+router.match("/a%2Eb", lenient=True)
+# same as router.match("/a.b") - %2E is just an encoded '.'
+
+router.match("/a%2Fb", lenient=True)
+# NOT the same as router.match("/a/b") - %2F stays encoded
+```
 
 A path that's well-formed but simply doesn't match any registered route
 returns `None` rather than raising - that's an ordinary routing miss, not
